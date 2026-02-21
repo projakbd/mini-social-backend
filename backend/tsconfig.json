@@ -8,7 +8,7 @@
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
     "target": "esnext",
-    "types": [],
+    "types": ["node"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -29,7 +29,7 @@
     // "noPropertyAccessFromIndexSignature": true,
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
+
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleResolution": "nodenext",

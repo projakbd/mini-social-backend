@@ -1,12 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-
-interface IUser {
-  name: string;
-  email: string;
-  password?: string;
-  matchPassword(enteredPassword: string): Promise<boolean>;
-}
+import type { IUser } from '../types/index.js';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -23,6 +17,10 @@ const userSchema = new mongoose.Schema<IUser>(
     password: {
       type: String,
       required: true,
+    },
+    fcmTokens: {
+      type: [String],
+      default: [],
     },
   },
   {

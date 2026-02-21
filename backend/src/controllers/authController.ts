@@ -1,78 +1,90 @@
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
+import { registerSchema, loginSchema, fcmTokenSchema } from '../schemas/authSchemas.js';
 
-const registerSchema = z.object({
-    name: z.string().min(3).max(30),
-    email: z.email(),
-    password: z.string().min(6),
-});
-
-const loginSchema = z.object({
-    email: z.email(),
-    password: z.string().min(6),
-});
 
 //Register
 export const registerUser = async (req: Request, res: Response) => {
-    const parsedData = registerSchema.safeParse(req.body);
+  const parsedData = registerSchema.safeParse(req.body);
 
-    if (!parsedData.success) {
-        res.status(400);
-        throw new Error(parsedData.error.issues.map((i) => i.message).join(', '));
-    }
+  if (!parsedData.success) {
+    res.status(400).json({ error: parsedData.error.issues.map((i) => i.message).join(', ') });
+    return;
+  }
 
-    const { name, email, password } = parsedData.data;
+  const { name, email, password } = parsedData.data;
 
-    const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ email });
 
-    if (userExists) {
-        res.status(400);
-        throw new Error('User with this email already exists');
-    }
+  if (userExists) {
+    res.status(400).json({ error: 'User with this email already exists' });
+    return;
+  }
 
-    const user = await User.create({
-        name,
-        email,
-        password,
+  const user = await User.create({
+    name,
+    email,
+    password,
+  });
+
+  if (user) {
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token: generateToken(user._id),
     });
-
-    if (user) {
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            token: generateToken(user._id),
-        });
-    } else {
-        res.status(400);
-        throw new Error('Invalid user data');
-    }
+  } else {
+    res.status(400).json({ error: 'Invalid user data' });
+  }
 };
 
 //Login
 export const loginUser = async (req: Request, res: Response) => {
-    const parsedData = loginSchema.safeParse(req.body);
+  const parsedData = loginSchema.safeParse(req.body);
 
-    if (!parsedData.success) {
-        res.status(400);
-        throw new Error(parsedData.error.issues.map((i) => i.message).join(', '));
+  if (!parsedData.success) {
+    res.status(400).json({ error: parsedData.error.issues.map((i) => i.message).join(', ') });
+    return;
+  }
+
+  const { email, password } = parsedData.data;
+
+  const user = await User.findOne({ email });
+
+  if (user && (await user.matchPassword(password))) {
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token: generateToken(user._id),
+    });
+  } else {
+    res.status(401).json({ error: 'Invalid email or password' });
+  }
+};
+
+// Save FCM Token
+export const saveFCMToken = async (req: Request, res: Response) => {
+  const parsedData = fcmTokenSchema.safeParse(req.body);
+
+  if (!parsedData.success) {
+    res.status(400).json({ error: parsedData.error.issues.map((i) => i.message).join(', ') });
+    return;
+  }
+
+  const { fcmToken } = parsedData.data;
+
+  const user = await User.findById(req.user?._id);
+
+  if (user) {
+    if (!user.fcmTokens?.includes(fcmToken)) {
+      user.fcmTokens?.push(fcmToken);
+      await user.save();
     }
-
-    const { email, password } = parsedData.data;
-
-    const user = await User.findOne({ email });
-
-    if (user && (await user.matchPassword(password))) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            token: generateToken(user._id),
-        });
-    } else {
-        res.status(401);
-        throw new Error('Invalid email or password');
-    }
+    res.json({ message: 'FCM token saved successfully' });
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
 };

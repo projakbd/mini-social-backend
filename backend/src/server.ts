@@ -7,6 +7,7 @@ import logger from './middlewares/logger.js';
 import errorHandler from './middlewares/errorHandler.js';
 
 import authRoutes from './routes/authRoutes.js';
+import postRoutes from './routes/postRoutes.js';
 
 dotenv.config();
 
@@ -25,14 +26,14 @@ app.use(logger);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/posts', postRoutes);
 
 app.get('/api/health', (_req: Request, res: Response) => {
-    res.send({ status: 'ok', environment: process.env.NODE_ENV });
+  res.send({ status: 'ok', environment: process.env.NODE_ENV });
 });
-
 
 app.use(errorHandler);
 
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
