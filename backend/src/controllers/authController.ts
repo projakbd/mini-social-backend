@@ -79,12 +79,19 @@ export const saveFCMToken = async (req: Request, res: Response) => {
   const user = await User.findById(req.user?._id);
 
   if (user) {
-    if (!user.fcmTokens?.includes(fcmToken)) {
-      user.fcmTokens?.push(fcmToken);
+    if (!user.fcmTokens) {
+      user.fcmTokens = [];
+    }
+    if (!user.fcmTokens.includes(fcmToken)) {
+      user.fcmTokens.push(fcmToken);
       await user.save();
+      console.log(`FCM Token saved successfully for user: ${user._id}`);
+    } else {
+      console.log(`FCM Token already exists for user: ${user._id}`);
     }
     res.json({ message: 'FCM token saved successfully' });
   } else {
+    console.warn(`Attempted to save FCM token for non-existent user: ${req.user?._id}`);
     res.status(404).json({ error: 'User not found' });
   }
 };

@@ -7,10 +7,13 @@ export const sendNotification = async ({ userId, title, body, data }: SendNotifi
     try {
         const user = await User.findById(userId);
 
-        if (!user || !user.fcmTokens || user.fcmTokens.length === 0) {
-            console.log(`No FCM tokens found for user ${userId}. Notification not sent.`);
+        if (!user || !user.fcmTokens || user.fcmTokens.filter(t => !!t).length === 0) {
+            console.log(`No valid FCM tokens found for user ${userId}. Tokens in DB:`, user?.fcmTokens);
             return;
         }
+
+        const validTokens = user.fcmTokens.filter(t => !!t);
+        console.log(`Attempting to send notification to user ${userId} with ${validTokens.length} tokens.`);
 
         const message: admin.messaging.MulticastMessage = {
             notification: {
@@ -18,17 +21,18 @@ export const sendNotification = async ({ userId, title, body, data }: SendNotifi
                 body,
             },
             ...(data && { data }),
-            tokens: user.fcmTokens,
+            tokens: validTokens,
         };
 
         const response = await admin.messaging().sendEachForMulticast(message);
 
-        console.log(`Successfully sent message to user ${userId}:`, response.successCount);
+        console.log(`FCM Response for user ${userId}: Success=${response.successCount}, Failure=${response.failureCount}`);
 
         if (response.failureCount > 0) {
             const failedTokens: string[] = [];
             response.responses.forEach((resp, idx) => {
                 if (!resp.success) {
+                    console.error(`FCM error for token ${user.fcmTokens![idx]}:`, resp.error);
                     if (
                         resp.error?.code === 'messaging/invalid-registration-token' ||
                         resp.error?.code === 'messaging/registration-token-not-registered'
