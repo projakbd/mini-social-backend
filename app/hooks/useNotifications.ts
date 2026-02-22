@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { saveFCMToken } from '@/services/authService';
 import { router } from 'expo-router';
@@ -24,20 +24,27 @@ export function useNotifications() {
     if (!token) return;
 
     async function registerAndSaveToken() {
-      if (!Device.isDevice) return;
-      const { status: existing } = await Notifications.getPermissionsAsync();
-      let final = existing;
-      if (existing !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        final = status;
-      }
-      if (final !== 'granted') return;
-
       try {
-        const pushToken = (await Notifications.getExpoPushTokenAsync()).data;
+        const { status: existing } = await Notifications.getPermissionsAsync();
+        let final = existing;
+        if (existing !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          final = status;
+        }
+
+        console.log('Notification permission status:', final);
+        if (final !== 'granted') {
+          Alert.alert('Notification', 'No notification permission!');
+          return;
+        }
+
+        const pushToken = (await Notifications.getDevicePushTokenAsync()).data;
+        console.log('Acquired Native FCM Token:', pushToken);
+
         if (pushToken && !tokenRegistered.current) {
           await saveFCMToken(pushToken);
           tokenRegistered.current = true;
+          console.log('Token successfully sent to backend');
         }
       } catch (e) {
         console.warn('Failed to register push token', e);

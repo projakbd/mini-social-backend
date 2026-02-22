@@ -36,5 +36,10 @@ module.exports = {
       ['expo-notifications', { color: '#6c5ce7' }],
       'expo-asset',
     ],
+    extra: {
+      eas: {
+        projectId: 'c8b61cef-7ec4-40bc-bfee-a001f4d17b20',
+      },
+    },
   },
 };
