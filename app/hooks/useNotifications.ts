@@ -21,7 +21,10 @@ export function useNotifications() {
   const tokenRegistered = useRef(false);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      tokenRegistered.current = false;
+      return;
+    }
 
     async function registerAndSaveToken() {
       try {
@@ -38,13 +41,24 @@ export function useNotifications() {
           return;
         }
 
-        const pushToken = (await Notifications.getDevicePushTokenAsync()).data;
-        console.log('Acquired Native FCM Token:', pushToken);
-
+        let pushToken: string | null = null;
+        try {
+          const deviceToken = (await Notifications.getDevicePushTokenAsync()).data;
+          if (deviceToken) {
+            pushToken = deviceToken;
+            console.log('Acquired device push token:', deviceToken.slice(0, 30) + '...');
+          }
+        } catch (_) {
+        }
+        if (!pushToken) {
+          const expoToken = (await Notifications.getExpoPushTokenAsync()).data;
+          pushToken = expoToken;
+          console.log('Using Expo push token (Expo Go or fallback)');
+        }
         if (pushToken && !tokenRegistered.current) {
           await saveFCMToken(pushToken);
           tokenRegistered.current = true;
-          console.log('Token successfully sent to backend');
+          console.log('Token sent to backend');
         }
       } catch (e) {
         console.warn('Failed to register push token', e);
