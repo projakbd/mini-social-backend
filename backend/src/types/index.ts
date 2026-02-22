@@ -2,7 +2,7 @@ import type { Types, Document } from 'mongoose';
 import type { Request } from 'express';
 
 export interface IUser {
-  name: string;
+  username: string;
   email: string;
   password?: string;
   fcmTokens?: string[];
@@ -27,7 +27,7 @@ export interface IPost extends Document {
 export interface AuthRequest extends Request {
   user?: {
     _id: Types.ObjectId;
-    name: string;
+    username: string;
     email: string;
   };
 }

@@ -4,7 +4,7 @@ import type { IUser } from '../types/index.js';
 
 const userSchema = new mongoose.Schema<IUser>(
   {
-    name: {
+    username: {
       type: String,
       required: true,
       unique: true,

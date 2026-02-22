@@ -7,7 +7,7 @@ declare module 'express-serve-static-core' {
   interface Request {
     user?: {
       _id: Types.ObjectId;
-      name: string;
+      username: string;
       email: string;
     };
   }
@@ -39,7 +39,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       if (user) {
         req.user = {
           _id: user._id,
-          name: user.name,
+          username: user.username,
           email: user.email,
         };
         next();

@@ -26,7 +26,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
         author: req.user._id,
     });
 
-    await post.populate('author', 'name email');
+    await post.populate('author', 'username email');
 
     res.status(201).json(post);
 };
@@ -41,8 +41,9 @@ export const getPosts = async (req: AuthRequest, res: Response) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate('author', 'name email')
-        .populate('comments.user', 'name email');
+        .populate('author', 'username email')
+        .populate('likes', 'username email')
+        .populate('comments.user', 'username email');
 
     const total = await Post.countDocuments();
 
@@ -77,7 +78,7 @@ export const likePost = async (req: AuthRequest, res: Response) => {
 
     const currentUser = req.user!;
 
-    const hasLiked = post.likes.includes(currentUser._id);
+    const hasLiked = post.likes.some((userId) => userId.toString() === currentUser._id.toString());
 
     if (hasLiked) {
         post.likes = post.likes.filter((userId) => userId.toString() !== currentUser._id.toString());
@@ -87,7 +88,7 @@ export const likePost = async (req: AuthRequest, res: Response) => {
             void sendNotification({
                 userId: post.author.toString(),
                 title: 'New Like!',
-                body: `${currentUser.name} liked your post.`,
+                body: `${currentUser.username} liked your post.`,
                 data: { postId: post._id.toString() },
             });
         }
@@ -135,17 +136,39 @@ export const commentOnPost = async (req: AuthRequest, res: Response) => {
     post.comments.push(comment as unknown as IComment);
     await post.save();
 
-    const updatedPost = await Post.findById(id).populate('comments.user', 'name email');
+    const updatedPost = await Post.findById(id).populate('comments.user', 'username email');
     const newComment = updatedPost?.comments[updatedPost.comments.length - 1];
 
     if (post.author.toString() !== req.user?._id.toString()) {
         void sendNotification({
             userId: post.author.toString(),
             title: 'New Comment!',
-            body: `${req.user?.name} commented on your post: "${parsedData.data.text.substring(0, 30)}${parsedData.data.text.length > 30 ? '...' : ''}"`,
+            body: `${req.user?.username} commented on your post: "${parsedData.data.text.substring(0, 30)}${parsedData.data.text.length > 30 ? '...' : ''}"`,
             data: { postId: post._id.toString() },
         });
     }
 
     res.status(201).json(newComment);
+};
+
+// Get Post By ID
+export const getPostById = async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
+        res.status(400).json({ error: 'Invalid post ID' });
+        return;
+    }
+
+    const post = await Post.findById(id)
+        .populate('author', 'username email')
+        .populate('likes', 'username email')
+        .populate('comments.user', 'username email');
+
+    if (!post) {
+        res.status(404).json({ error: 'Post not found' });
+        return;
+    }
+
+    res.json(post);
 };
