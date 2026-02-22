@@ -21,14 +21,14 @@ module.exports = {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.minisocial.app',
+      bundleIdentifier: 'com.projakbd.mini_social',
     },
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#1a1b2e',
       },
-      package: 'com.minisocial.app',
+      package: 'com.projakbd.mini_social',
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON || (fs.existsSync(googleServicesPath) ? './google-services.json' : undefined),
     },
     plugins: [
