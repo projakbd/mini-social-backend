@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { createPost } from '@/services/postService';
@@ -18,6 +19,8 @@ import { useAuthStore } from '@/store/authStore';
 const MAX_LENGTH = 500;
 
 export default function CreatePostScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,7 +67,7 @@ export default function CreatePostScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, isTablet && styles.containerTablet]}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -106,6 +109,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1b2e',
+  },
+  containerTablet: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderLeftColor: '#16213e',
+    borderRightColor: '#16213e',
   },
   scrollContent: {
     padding: 16,

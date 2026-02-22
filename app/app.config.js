@@ -29,7 +29,7 @@ module.exports = {
         backgroundColor: '#1a1b2e',
       },
       package: 'com.minisocial.app',
-      ...(hasGoogleServices && { googleServicesFile: './google-services.json' }),
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON || (fs.existsSync(googleServicesPath) ? './google-services.json' : undefined),
     },
     plugins: [
       'expo-router',

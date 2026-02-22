@@ -17,7 +17,7 @@ export interface Post {
   _id: string;
   content: string;
   author: Author;
-  likes: string[];
+  likes: (string | Author)[];
   comments: Comment[];
   createdAt: string;
   updatedAt: string;

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Post, Comment as CommentType } from '@/services/postService';
@@ -29,6 +30,8 @@ export function CommentModal({
   onSubmitComment,
   loading = false,
 }: CommentModalProps) {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,9 +58,9 @@ export function CommentModal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
+        style={[styles.overlay, isTablet && styles.overlayTablet]}
       >
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, isTablet && styles.sheetTablet]}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>Comments</Text>
@@ -124,12 +127,24 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
+  overlayTablet: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
   sheet: {
     backgroundColor: '#1a1b2e',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    width: '100%',
     maxHeight: '80%',
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+  },
+  sheetTablet: {
+    borderRadius: 20,
+    width: 600,
+    maxHeight: '70%',
+    paddingBottom: 20,
   },
   handle: {
     width: 40,

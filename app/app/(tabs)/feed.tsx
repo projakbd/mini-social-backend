@@ -7,6 +7,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
@@ -23,6 +24,8 @@ import { POSTS_PAGE_SIZE } from '@/constants/config';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function FeedScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width > 768;
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const logout = useAuthStore((s) => s.logout);
@@ -80,9 +83,11 @@ export default function FeedScreen() {
       setPosts((prev) =>
         prev.map((p) => {
           if (p._id !== postId) return p;
-          const liked = p.likes.includes(user._id);
+          const liked = p.likes.some(
+            (l) => (typeof l === 'string' ? l : l._id) === user._id
+          );
           const nextLikes = liked
-            ? p.likes.filter((id) => id !== user._id)
+            ? p.likes.filter((l) => (typeof l === 'string' ? l : l._id) !== user._id)
             : [...p.likes, user._id];
           return { ...p, likes: nextLikes };
         })
@@ -123,7 +128,7 @@ export default function FeedScreen() {
   if (!user) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isTablet && styles.containerTablet]}>
       <View style={styles.headerRow}>
         <Text style={styles.greeting}>Hi, {user.username}</Text>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
@@ -180,6 +185,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1b2e',
+  },
+  containerTablet: {
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderLeftColor: '#16213e',
+    borderRightColor: '#16213e',
   },
   headerRow: {
     flexDirection: 'row',

@@ -36,6 +36,7 @@ export async function logout() {
   await setAuthToken(null);
 }
 
-export async function saveFCMToken(fcmToken: string): Promise<void> {
-  await api.post('/auth/fcm-token', { fcmToken });
+export async function saveFCMToken(fcmToken: string, authToken?: string): Promise<void> {
+  const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+  await api.post('/auth/fcm-token', { fcmToken }, { headers });
 }

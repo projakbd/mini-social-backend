@@ -14,6 +14,9 @@ api.interceptors.request.use(
     const token = await SecureStore.getItemAsync(TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url} - Auth Header Set: Bearer ${token.slice(0, 10)}...`);
+    } else {
+      console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url} - No Auth Token Found`);
     }
     return config;
   },
@@ -23,10 +26,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {
-    console.log('error...', err)
-    if (err.response?.status === 401) {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
-    }
+    console.log('[API Response Error]', err.config?.url, err.response?.status);
     return Promise.reject(err);
   }
 );

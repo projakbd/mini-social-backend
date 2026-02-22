@@ -14,7 +14,9 @@ interface PostCardProps {
 export function PostCard({ post, currentUserId, onLike, onComment, onPress, isLiking }: PostCardProps) {
   const author = post.author as Author;
   const username = author?.username ?? 'Unknown';
-  const isLiked = post.likes.includes(currentUserId);
+  const isLiked = post.likes.some(
+    (l) => (typeof l === 'string' ? l : l._id) === currentUserId
+  );
   const likesCount = Array.isArray(post.likes) ? post.likes.length : 0;
   const commentsCount = Array.isArray(post.comments) ? post.comments.length : 0;
 
